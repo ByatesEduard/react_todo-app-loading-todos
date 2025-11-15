@@ -28,6 +28,7 @@ export const App: React.FC = () => {
       try {
         setIsLoaded(true);
         const todosFromApi = await getTodos();
+
         setTodos(todosFromApi);
       } catch {
         setErrorMessage('Something went wrong. Please try again later.');
