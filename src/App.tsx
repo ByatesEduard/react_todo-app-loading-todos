@@ -2,7 +2,13 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useEffect, useState } from 'react';
 import { UserWarning } from './UserWarning';
-import { USER_ID, getTodos } from './api/todos';
+import {
+  USER_ID,
+  getTodos,
+  createTodo,
+  deleteTodo,
+  updateTodo,
+} from './api/todos';
 import { Todo } from './types/Todo';
 
 import { Header } from './components/Header/Header';
@@ -17,63 +23,99 @@ enum FilterEnum {
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<FilterEnum>(FilterEnum.all);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
+  const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
   // Load todos
   useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        setIsLoaded(true);
-        const todosFromApi = await getTodos();
+    if (!USER_ID) {
+      return;
+    }
 
-        setTodos(todosFromApi);
-      } catch {
-        setErrorMessage('Something went wrong. Please try again later.');
+    getTodos()
+      .then(setTodos)
+      .catch(() => {
+        setErrorMessage('Unable to load todos');
         setTimeout(() => setErrorMessage(null), 3000);
-      } finally {
-        setIsLoaded(false);
-      }
-    };
-
-    loadTodos();
+      });
   }, []);
 
-  // Filtering logic
-  useEffect(() => {
-    switch (filter) {
-      case FilterEnum.active:
-        setFilteredTodos(todos.filter(todo => !todo.completed));
-        break;
+  const handleAddTodo = async (title: string) => {
+    const newTodo: Todo = {
+      id: 0,
+      userId: USER_ID,
+      title,
+      completed: false,
+    };
 
-      case FilterEnum.completed:
-        setFilteredTodos(todos.filter(todo => todo.completed));
-        break;
+    setTempTodo(newTodo);
+    setErrorMessage(null);
 
-      default:
-        setFilteredTodos(todos);
+    try {
+      const createdTodo = await createTodo(title);
+
+      setTodos((prev) => [...prev, createdTodo]);
+    } catch (error) {
+      setErrorMessage('Unable to add a todo');
+      setTimeout(() => setErrorMessage(null), 3000);
+      throw error;
+    } finally {
+      setTempTodo(null);
     }
-  }, [todos, filter]);
-
-  // Toggle completed
-  const toggleTodoCompleted = (todoId: number) => {
-    setIsLoaded(true);
-
-    setTodos(prev =>
-      prev.map(todo =>
-        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo,
-      ),
-    );
-
-    setTimeout(() => setIsLoaded(false), 150);
   };
 
-  // Clear completed
-  const clearCompleted = () => {
-    setTodos(todos.filter(todo => !todo.completed));
+  const handleRemoveTodo = async (todoId: number) => {
+    setLoadingIds((prev) => [...prev, todoId]);
+    setErrorMessage(null);
+
+    try {
+      await deleteTodo(todoId);
+      setTodos((prev) => prev.filter((t) => t.id !== todoId));
+    } catch (error) {
+      setErrorMessage('Unable to delete a todo');
+      setTimeout(() => setErrorMessage(null), 3000);
+    } finally {
+      setLoadingIds((prev) => prev.filter((id) => id !== todoId));
+    }
   };
+
+  const handleUpdateTodo = async (todoId: number, data: Partial<Todo>) => {
+    setLoadingIds((prev) => [...prev, todoId]);
+    setErrorMessage(null);
+
+    try {
+      const updatedTodo = await updateTodo(todoId, data);
+
+      setTodos((prev) => prev.map((t) => (t.id === todoId ? updatedTodo : t)));
+    } catch (error) {
+      setErrorMessage('Unable to update a todo');
+      setTimeout(() => setErrorMessage(null), 3000);
+    } finally {
+      setLoadingIds((prev) => prev.filter((id) => id !== todoId));
+    }
+  };
+
+  const handleClearCompleted = () => {
+    todos.forEach((todo) => {
+      if (todo.completed) {
+        handleRemoveTodo(todo.id);
+      }
+    });
+  };
+
+  const filteredTodos = todos.filter((todo) => {
+    if (filter === FilterEnum.active) {
+      return !todo.completed;
+    }
+
+    if (filter === FilterEnum.completed) {
+      return todo.completed;
+    }
+
+    return true;
+  });
 
   if (!USER_ID) {
     return <UserWarning />;
@@ -84,26 +126,42 @@ export const App: React.FC = () => {
       <h1 className="todoapp__title">todos</h1>
 
       <div className="todoapp__content">
-        <Header />
+        <Header onAdd={handleAddTodo} isLoaded={!!tempTodo} />
 
         <section className="todoapp__main" data-cy="TodoList">
-          {filteredTodos.map(todo => (
+          {filteredTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
-              isLoaded={isLoaded}
-              toggleTodoCompleted={toggleTodoCompleted}
+              isLoaded={!!tempTodo}
+              isLoading={loadingIds.includes(todo.id)}
+              toggleTodoCompleted={(id) =>
+                handleUpdateTodo(id, { completed: !todo.completed })
+              }
+              removeTodo={handleRemoveTodo}
+              updateTodo={(id, title) => handleUpdateTodo(id, { title })}
             />
           ))}
+
+          {tempTodo && (
+            <TodoItem
+              todo={tempTodo}
+              isLoaded={true}
+              isLoading={true}
+              toggleTodoCompleted={() => {}}
+              removeTodo={() => {}}
+              updateTodo={() => {}}
+            />
+          )}
         </section>
 
         {todos.length > 0 && (
           <Footer
-            activeCount={todos.filter(t => !t.completed).length}
+            activeCount={todos.filter((t) => !t.completed).length}
             filter={filter}
-            onFilterChange={setFilter}
-            hasCompleted={todos.some(t => t.completed)}
-            onClearCompleted={clearCompleted}
+            onFilterChange={(newFilter) => setFilter(newFilter as FilterEnum)}
+            hasCompleted={todos.some((t) => t.completed)}
+            onClearCompleted={handleClearCompleted}
           />
         )}
 

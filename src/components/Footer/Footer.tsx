@@ -1,6 +1,6 @@
 import React from 'react';
 
-import{FooterProps} from '../../types/Todo';
+import { FooterProps } from '../../types/Todo';
 
 export const Footer: React.FC<FooterProps> = ({
   activeCount,
