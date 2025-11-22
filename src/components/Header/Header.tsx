@@ -3,7 +3,7 @@ import React from 'react';
 export const Header: React.FC = () => {
   return (
     <header className="todoapp__header">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      {/* this button should have `active` class only if all todos are completed */}
       <button
         type="button"
         className="todoapp__toggle-all active"
@@ -24,5 +24,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-
-// Додати форму з інпутом для створення нового завдання.

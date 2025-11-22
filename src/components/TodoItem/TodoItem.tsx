@@ -1,6 +1,12 @@
 import React from 'react';
+import { Todo } from '../../types/Todo';
 import classNames from 'classnames';
-import { Props } from '../../types/Todo';
+
+type Props = {
+  todo: Todo;
+  isLoaded: boolean;
+  toggleTodoCompleted: (id: number) => void;
+};
 
 export const TodoItem: React.FC<Props> = ({
   todo,
@@ -20,7 +26,6 @@ export const TodoItem: React.FC<Props> = ({
     >
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="todo__status-label">
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <input
           data-cy="TodoStatus"
           type="checkbox"
@@ -44,5 +49,3 @@ export const TodoItem: React.FC<Props> = ({
     </div>
   );
 };
-
-// Реалізувати TodoItem.tsx: Верстка одного елемента списку (чекбокс, текст, кнопка видалення).
