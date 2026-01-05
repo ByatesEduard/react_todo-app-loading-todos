@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
-import { FilterEnum, Footer } from './components/Footer/footer';
-import { Error } from './components/Error/errorMessage';
-import { Header } from './components/Header/header';
-import { TodoItem } from './components/TodoItem/todoItem';
+import { FilterEnum, Footer } from './components/Footer/Footer';
+import { Error } from './components/Error/ErrorMessage';
+import { Header } from './components/Header/Header';
+import { TodoItem } from './components/TodoItem/TodoItem';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[] | null>(null);
