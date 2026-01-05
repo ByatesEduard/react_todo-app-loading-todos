@@ -9,6 +9,7 @@ export const Header: React.FC = () => {
         className="todoapp__toggle-all active"
         data-cy="ToggleAllButton"
         disabled
+        title="Toggle all todos"
       />
 
       {/* Add a todo on form submit */}

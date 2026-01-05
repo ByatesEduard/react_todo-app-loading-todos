@@ -32,6 +32,7 @@ export const TodoItem: React.FC<Props> = ({
           checked={todo.completed}
           className="todo__status"
           onChange={() => handlerToggleTodo(todo.id)}
+          title="Toggle todo completed status"
         />
       </label>
 
