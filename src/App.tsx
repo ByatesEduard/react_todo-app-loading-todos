@@ -5,7 +5,7 @@ import { UserWarning } from './UserWarning';
 import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
 import { FilterEnum, Footer } from './components/Footer/Footer';
-import { Error } from './components/Error/ErrorMessage';
+import { Error } from './components/Error/errorMessage';
 import { Header } from './components/Header/Header';
 import { TodoItem } from './components/TodoItem/TodoItem';
 
